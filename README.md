@@ -31,6 +31,45 @@
 3) По завершении - статус Completed, рассчитывается exec_time и сохраняется в БД.
 4) Клиент опрашивает GET /task/{id} и получает текущее состояние и тайминги.
 
+## Запуск
+
+### Через uv
+1) Установите uv (если не установлен):
+    - Windows/macOS/Linux: см. инструкции https://docs.astral.sh/uv/getting-started/ (одна команда установки).
+2) Установите зависимости и запустите сервер:
+```
+uv sync
+uv run uvicorn src.drweb_app.main:app --reload --host 0.0.0.0 --port 8000
+```
+3) Откройте Swagger UI: http://localhost:8000/docs
+
+### Через pip
+1) Создайте и активируйте виртуальное окружение:
+```
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# Linux/macOS
+source .venv/bin/activate
+```
+2) Установите зависимости:
+```
+pip install -U pip
+# если есть requirements.txt
+pip install -r requirements.txt
+# или с использованием pyproject.toml
+pip install -e .
+```
+3) Запустите сервер:
+```
+uvicorn src.drweb_app.main:app --reload --host 0.0.0.0 --port 8000
+```
+4) Откройте Swagger UI: http://localhost:8000/docs
+
+Примечания:
+- Приложение создаст файл БД src/drweb_app/app.sqlite при первом запуске.
+- Параллелизм исполнения регулируется параметром семафора в конфигурации.
+
 ## Задача
 Необходимо реализовать прототип веб-сервиса по организации очереди задач.
 
@@ -56,3 +95,4 @@ time.sleep(random.randint(0,10))
 - Результаты записать в локальную БД с полями: id (первичный ключ, номер поставленной задачи), create_time (время создания задачи), start_time (время старта задачи), exec_time (время выполнения задачи);
 - Нельзя использовать celery/dramariq/taskiq и другие готовые фреймворки для работы с очередями задач;
 - При написании стоит использовать python>=3.9, БД на свое усмотрение, любой веб-фреймворк (желательно асинхронный).
+
