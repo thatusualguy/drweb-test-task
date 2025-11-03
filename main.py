@@ -18,6 +18,8 @@ async def lifespan(app: FastAPI):
     task_runner.stop()
 
 
+print("docs at http://localhost:8000/docs")
+
 app = FastAPI(
     lifespan=lifespan,
 )
