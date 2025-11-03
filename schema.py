@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import IntEnum, Enum
 
 from pydantic import BaseModel
@@ -16,7 +16,7 @@ class TaskResponse(BaseModel):
     status: StatusEnum
     create_time: datetime
     start_time: datetime | None
-    time_to_execute: int | None
+    time_to_execute: timedelta | None
 
     class Config:
         use_enum_values = True
