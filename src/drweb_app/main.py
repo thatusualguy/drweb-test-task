@@ -23,8 +23,11 @@ async def lifespan(app: FastAPI):
     if RESET_UNFINISHED:
         await reset_unfinished_tasks()
 
+    # Старт раннера задач
     await task_runner.start()
+    # Передача управления приложению
     yield
+    # Остнаовка раннера задач
     await task_runner.stop()
 
 
@@ -40,6 +43,7 @@ async def root():
 
 @app.post("/task/new", )
 async def new_task(db: AsyncSession = Depends(get_db), ) -> TaskId:
+    # Новая задача со временем создания
     task = Task(create_time=datetime.now(), )
     db.add(task)
     await db.commit()
@@ -60,6 +64,7 @@ async def say_hello(task_id: int,
             detail=f"Task {task_id} not found"
         )
 
+    # Статус определяется по наличию таймингов в БД
     if not task.start_time:
         status = StatusEnum.in_queue
     elif not task.exec_time:

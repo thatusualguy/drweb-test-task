@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.drweb_app.config import DATABASE_URL
 from src.drweb_app.db.models import Base, Task
 
+# Асинхронный движок
 engine = create_async_engine(DATABASE_URL, )
 
 AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, )
@@ -15,11 +16,13 @@ async def init_db():
 
 
 async def get_db():
+    # Провайдер зависимостей для DI FastAPI
     async with AsyncSessionLocal() as session:
         yield session
 
 
 async def reset_unfinished_tasks():
+    # Сбрасывает задачи, которые были начаты, но не завершены
     async with AsyncSessionLocal() as session:
         result = await session.execute(
             select(Task).where(Task.start_time.is_not(None), Task.exec_time.is_(None))

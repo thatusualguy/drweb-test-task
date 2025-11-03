@@ -21,4 +21,5 @@ class TaskResponse(BaseModel):
     time_to_execute: timedelta | None
 
     class Config:
+        # Строковые значения enum вместо int
         use_enum_values = True
