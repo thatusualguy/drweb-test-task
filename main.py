@@ -4,7 +4,8 @@ from datetime import datetime
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from database import get_db, init_db
+from config import RESET_UNFINISHED
+from database import get_db, init_db, reset_unfinished_tasks
 from models import Task
 from schema import TaskId, TaskResponse, StatusEnum
 from task_runner import task_runner
@@ -13,6 +14,10 @@ from task_runner import task_runner
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+
+    if RESET_UNFINISHED:
+        reset_unfinished_tasks()
+
     task_runner.start()
     yield
     task_runner.stop()
