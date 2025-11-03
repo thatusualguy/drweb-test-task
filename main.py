@@ -19,9 +19,9 @@ async def lifespan(app: FastAPI):
     if RESET_UNFINISHED:
         await reset_unfinished_tasks()
 
-    task_runner.start()
+    await task_runner.start()
     yield
-    task_runner.stop()
+    await task_runner.stop()
 
 
 print("docs at http://localhost:8000/docs")

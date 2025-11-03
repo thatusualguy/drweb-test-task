@@ -1,59 +1,71 @@
 import threading
-import time
+import asyncio
 from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import select
 
 from config import MAX_WORKERS
 from database import AsyncSessionLocal
 from models import Task
 from task import run_task
-from sqlalchemy import select
-import asyncio
 
 
-async def _get_next_task() -> Task | None:
+async def _get_next_task() -> Optional[Task]:
     async with AsyncSessionLocal() as db:
         result = await db.execute(
             select(Task).where(Task.start_time == None).order_by(Task.create_time)
         )
-        task = result.scalars().first()
-        return task
+        return result.scalars().first()
 
 
 class TaskRunner:
-    def __init__(self, max_workers=2):
+    def __init__(self, max_workers: int = 2):
         self.max_workers = max_workers
-        self.running_tasks = 0
-        self.lock = threading.Lock()
-        self.executor_thread = None
-        self.running = False
+        self._running = False
+        self._semaphore: asyncio.Semaphore | None = None
+        self._poll_interval = 0.1
+        self._main_task: asyncio.Task | None = None
 
-    def start(self):
-        self.running = True
-        self.executor_thread = threading.Thread(target=self._run_executor)
-        self.executor_thread.start()
+    async def start(self):
+        if self._running:
+            return
+        self._running = True
+        self._semaphore = asyncio.Semaphore(self.max_workers)
+        self._main_task = asyncio.create_task(self._run_executor())
 
-    def stop(self):
-        self.running = False
-        if self.executor_thread:
-            self.executor_thread.join()
+    async def stop(self):
+        if not self._running:
+            return
+        self._running = False
 
-    def _run_executor(self):
-        while self.running:
-            with self.lock:
-                if self.running_tasks < self.max_workers:
-                    task = asyncio.run(_get_next_task())
-                    if task:
-                        self.running_tasks += 1
-                        worker_thread = threading.Thread(
-                            target=self._execute_task,
-                            args=(task.id,),
-                        )
-                        worker_thread.start()
+        if self._main_task:
+            await self._main_task
+            self._main_task = None
 
-            time.sleep(0.1)
+        if self._semaphore:
+            for _ in range(self.max_workers):
+                await self._semaphore.acquire()
+            for _ in range(self.max_workers):
+                self._semaphore.release()
 
-    def _execute_task(self, task_id: int):
-        async def _do_work():
+    async def _run_executor(self):
+        assert self._semaphore is not None
+        while self._running:
+            await asyncio.sleep(self._poll_interval)
+
+            task = await _get_next_task()
+            if not task:
+                continue
+
+            if self._semaphore.locked():
+                continue
+
+            await self._semaphore.acquire()
+            asyncio.create_task(self._execute_task(task.id))
+
+    async def _execute_task(self, task_id: int):
+        try:
             async with AsyncSessionLocal() as db:
                 result = await db.execute(select(Task).where(Task.id == task_id))
                 task = result.scalars().first()
@@ -64,18 +76,14 @@ class TaskRunner:
                 await db.commit()
                 await db.refresh(task)
 
-                # run_task is sync and blocking by design; run it in a thread-aware way
-                run_task(task)
+                await run_task(task)
 
                 exec_time = datetime.now() - task.start_time
                 task.exec_time = exec_time
                 await db.commit()
-
-        try:
-            asyncio.run(_do_work())
         finally:
-            with self.lock:
-                self.running_tasks -= 1
+            if self._semaphore:
+                self._semaphore.release()
 
 
 task_runner = TaskRunner(max_workers=MAX_WORKERS)
