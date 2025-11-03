@@ -1,8 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from config import DATABASE_URL
-from models import Base, Task
+
+from src.drweb_app.db.models import Base, Task
+from src.drweb_app.config import DATABASE_URL
 
 engine = create_async_engine(DATABASE_URL, )
 

@@ -1,14 +1,13 @@
-import threading
 import asyncio
 from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import select
 
-from config import MAX_WORKERS
-from database import AsyncSessionLocal
-from models import Task
-from task import run_task
+from src.drweb_app.config import MAX_WORKERS
+from src.drweb_app.db.database import AsyncSessionLocal
+from src.drweb_app.db.models import Task
+from src.drweb_app.tasks.task import run_task
 
 
 async def _get_next_task() -> Optional[Task]:

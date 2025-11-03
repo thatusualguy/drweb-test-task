@@ -5,11 +5,11 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from config import RESET_UNFINISHED
-from database import get_db, init_db, reset_unfinished_tasks
-from models import Task
-from schema import TaskId, TaskResponse, StatusEnum
-from task_runner import task_runner
+from src.drweb_app.config import RESET_UNFINISHED
+from src.drweb_app.db.database import get_db, init_db, reset_unfinished_tasks
+from src.drweb_app.db.models import Task
+from src.drweb_app.schema import TaskId, TaskResponse, StatusEnum
+from src.drweb_app.tasks.task_runner import task_runner
 
 
 @asynccontextmanager
