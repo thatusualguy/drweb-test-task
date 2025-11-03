@@ -1,32 +1,30 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from config import DATABASE_URL
 from models import Base, Task
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False}
-)
+engine = create_async_engine(DATABASE_URL, )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+AsyncSessionLocal = async_sessionmaker(bind=engine, expire_on_commit=False, )
 
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
+async def init_db():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
 
 
-def reset_unfinished_tasks():
-    with Session(engine) as db:
-        unfinished_tasks = db.query(Task).filter(Task.start_time.is_not(None), Task.exec_time.is_(None)).all()
+async def reset_unfinished_tasks():
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(
+            select(Task).where(Task.start_time.is_not(None), Task.exec_time.is_(None))
+        )
+        unfinished_tasks = result.all()
         for unfinished_task in unfinished_tasks:
             unfinished_task.start_time = None
-        db.commit()
+        await session.commit()

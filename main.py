@@ -2,7 +2,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 
 from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from config import RESET_UNFINISHED
 from database import get_db, init_db, reset_unfinished_tasks
@@ -13,10 +14,10 @@ from task_runner import task_runner
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    await init_db()
 
     if RESET_UNFINISHED:
-        reset_unfinished_tasks()
+        await reset_unfinished_tasks()
 
     task_runner.start()
     yield
@@ -36,19 +37,20 @@ async def root():
 
 
 @app.post("/task/new", )
-async def new_task(db: Session = Depends(get_db), ) -> TaskId:
+async def new_task(db: AsyncSession = Depends(get_db), ) -> TaskId:
     task = Task(create_time=datetime.now(), )
     db.add(task)
-    db.commit()
-    db.refresh(task)
+    await db.commit()
+    await db.refresh(task)
     return TaskId(id=task.id)
 
 
 @app.get("/task/{task_id}", )
 async def say_hello(task_id: int,
-                    db: Session = Depends(get_db),
+                    db: AsyncSession = Depends(get_db),
                     ) -> TaskResponse:
-    task: Task | None = db.query(Task).filter(Task.id == task_id).first()
+    result = await db.execute(select(Task).where(Task.id == task_id))
+    task: Task | None = result.scalars().first()
 
     if not task:
         raise HTTPException(
