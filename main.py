@@ -7,12 +7,15 @@ from sqlalchemy.orm import Session
 from database import get_db, init_db
 from models import Task
 from schema import TaskId, TaskResponse, StatusEnum
+from task_runner import task_runner
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    task_runner.start()
     yield
+    task_runner.stop()
 
 
 app = FastAPI(
