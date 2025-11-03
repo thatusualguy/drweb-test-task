@@ -75,9 +75,6 @@ source .venv/bin/activate
 
 ```
 pip install -U pip
-# если есть requirements.txt
-pip install -r requirements.txt
-# или с использованием pyproject.toml
 pip install -e .
 ```
 
