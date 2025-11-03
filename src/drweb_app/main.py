@@ -1,11 +1,10 @@
 from contextlib import asynccontextmanager
 from datetime import datetime
 
-from fastapi import FastAPI, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
 import uvicorn
+from fastapi import FastAPI, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.drweb_app.config import RESET_UNFINISHED, SERVER_HOST, SERVER_PORT
 from src.drweb_app.db.database import get_db, init_db, reset_unfinished_tasks
@@ -27,7 +26,6 @@ async def lifespan(app: FastAPI):
     await task_runner.start()
     yield
     await task_runner.stop()
-
 
 
 app = FastAPI(
@@ -75,6 +73,7 @@ async def say_hello(task_id: int,
         start_time=task.start_time,
         time_to_execute=task.exec_time
     )
+
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=SERVER_HOST, port=SERVER_PORT, reload=True)

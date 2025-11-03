@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
-from enum import IntEnum, Enum
+from enum import Enum
 
 from pydantic import BaseModel
 
+
 class TaskId(BaseModel):
     id: int
+
 
 class StatusEnum(Enum):
     in_queue = "In Queue"

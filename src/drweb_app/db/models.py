@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional
 
-from sqlalchemy import DateTime, Integer, Interval
+from sqlalchemy import DateTime, Interval
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
