@@ -5,7 +5,9 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from src.drweb_app.config import RESET_UNFINISHED
+import uvicorn
+
+from src.drweb_app.config import RESET_UNFINISHED, SERVER_HOST, SERVER_PORT
 from src.drweb_app.db.database import get_db, init_db, reset_unfinished_tasks
 from src.drweb_app.db.models import Task
 from src.drweb_app.schema import TaskId, TaskResponse, StatusEnum
@@ -14,6 +16,9 @@ from src.drweb_app.tasks.task_runner import task_runner
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    docs_url = f"http://{SERVER_HOST}:{SERVER_PORT}/docs"
+    print(f"docs at {docs_url}")
+
     await init_db()
 
     if RESET_UNFINISHED:
@@ -24,7 +29,6 @@ async def lifespan(app: FastAPI):
     await task_runner.stop()
 
 
-print("docs at http://localhost:8000/docs")
 
 app = FastAPI(
     lifespan=lifespan,
@@ -71,3 +75,6 @@ async def say_hello(task_id: int,
         start_time=task.start_time,
         time_to_execute=task.exec_time
     )
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host=SERVER_HOST, port=SERVER_PORT, reload=True)
