@@ -5,6 +5,7 @@
 - [Стек](#стек)
 - [Архитектура решения](#архитектура-решения)
 - [Запуск](#запуск)
+    - [Через Docker Compose](#через-docker-compose)
     - [Через uv](#через-uv)
     - [Через pip](#через-pip)
 - [Задача](#задача)
@@ -46,13 +47,38 @@
 
 ## Запуск
 
+### Через Docker Compose
+
+1) Запустите приложение:
+
+```bash
+docker compose up -d
+```
+
+Эта команда автоматически соберет образ и запустит контейнер в фоновом режиме.
+
+2) Откройте Swagger UI: http://127.17.0.1:8000/docs
+- IP Docker Gateway может [зависеть](https://stackoverflow.com/a/20686101) от установки Docker
+
+3) Просмотр логов:
+
+```bash
+docker compose logs -f
+```
+
+4) Остановка приложения:
+
+```bash
+docker compose down
+```
+
 ### Через uv
 
 1) Установите uv (если не установлен):
     - Windows/macOS/Linux: см. инструкции https://docs.astral.sh/uv/getting-started/ (одна команда установки).
 2) Установите зависимости и запустите сервер:
 
-```
+```bash
 uv sync
 uv run uvicorn src.drweb_app.main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -63,7 +89,7 @@ uv run uvicorn src.drweb_app.main:app --reload --host 0.0.0.0 --port 8000
 
 1) Создайте и активируйте виртуальное окружение:
 
-```
+```bash
 python -m venv .venv
 # Windows
 .venv\Scripts\activate
@@ -73,14 +99,14 @@ source .venv/bin/activate
 
 2) Установите зависимости:
 
-```
+```bash
 pip install -U pip
 pip install -e .
 ```
 
 3) Запустите сервер:
 
-```
+```bash
 uvicorn src.drweb_app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
